@@ -4,9 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 [System.Serializable]
 public class Information : MonoBehaviour {
-
-
-
     public int ID;
     public string BigTitle;
     public string[] SubTitle;
@@ -82,9 +79,9 @@ public class Information : MonoBehaviour {
     }
     */
     Sprite ReadImage(string path) {
-        Debug.Log(path);
+       // Debug.Log(path);
         Sprite temp = Resources.Load<Sprite>(path);
-        Debug.Log(temp);
+        //Debug.Log(temp);
         return temp;
     }
 }

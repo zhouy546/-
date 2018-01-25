@@ -6,6 +6,9 @@ using LitJson;
 using UnityEngine.UI;
 
 public class ReadJson : MonoBehaviour {
+  
+     
+    public static ReadJson instance;
     private JsonData itemDate;
     private string jsonString;
     
@@ -15,6 +18,10 @@ public class ReadJson : MonoBehaviour {
   //  Image image;
     
     void Start () {
+        if (instance == null) {
+            instance = this;
+        }
+
         jsonString = Resources.Load<TextAsset>("information").text;
         itemDate = JsonMapper.ToObject(jsonString);
         readjson();
@@ -23,7 +30,7 @@ public class ReadJson : MonoBehaviour {
         {
             for (int i = 0; i < item.SubTitle.Length; i++)
             {
-                Debug.Log("Id: " + item.ID + "  BigTitle:" + item.BigTitle + "  subtitle:" +item.SubTitle[i]);
+               // Debug.Log("Id: " + item.ID + "  BigTitle:" + item.BigTitle + "  subtitle:" +item.SubTitle[i]);
             }
             item.setupImage();
         }
@@ -31,11 +38,15 @@ public class ReadJson : MonoBehaviour {
         {
             item.setupDictionary();
         }
-            //DEBUG IMAGE
-            //  myinformationList[0].getImage();
-            // Debug.Log(myinformationList[0].BackgroundImage.name);
-            //   image.sprite = myinformationList[0].BackgroundImage;
+        //DEBUG IMAGE
+        //  myinformationList[0].getImage();
+        // Debug.Log(myinformationList[0].BackgroundImage.name);
+        //   image.sprite = myinformationList[0].BackgroundImage;
+
+
         }
+
+
 
     void readjson()
     {
