@@ -7,8 +7,10 @@ public class UIClinet : MonoBehaviour {
     public  event initializationUItext UpdateUIeventtext;
     public delegate void initializationUImage();
     public  event initializationUItext UpdateUIeventImage;
+    int[] tempint;
 
-    Queue queueLeft;
+    delegate void setupBottomImage(int i, Information item);
+   
     [System.Serializable]
     public struct info{
 
@@ -29,11 +31,16 @@ public class UIClinet : MonoBehaviour {
         public Text SubTitle;
         public Text MainContent;
 
-        public Image[] BottomLeftImage;
-        public Image[] BottomMidImage;
-        public Image[] BottomRightImage;
+        public Image[] BottomFrontImage;
+        public Image[] BottomBackImage;
 
-        public Transform subImageGroup;
+        public List<string> BottomTitleSelection;
+        public Text[] BottomTitleText;
+
+
+        //public Dictionary<string,Image> BottomDisplay
+
+
         public RectTransform[] TopImagePos;
         public RectTransform[] TopimageSlot;
     }
@@ -42,7 +49,6 @@ public class UIClinet : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-       
     }
 
     public void ResetProgram() {
@@ -58,55 +64,19 @@ public class UIClinet : MonoBehaviour {
 
     }
 
-    private void OnDisable()
-    {
-        UpdateUIeventtext -= SetupText;
-    }
-
-
     IEnumerator SubScribeUpdateUIevent()
     {
         yield return new WaitForSeconds(.1f);
         UpdateUI();
     }
-
+    #region event and delegate
     public void UpdateUI()
     {
         UpdateUIeventtext += SetupText;
         UpdateUItext();
         UpdateUIeventImage += SetupImage;
         UpdateUIimage();
-    }
 
-    void SetupText() {
-
-        myinfo.BigTitle.text = myinfo.CurrentTitle;//setup default BigTitle
-        myinfo.SubTitle.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle[myinfo.CurrentSubtitleNum];//setup subtitle
-        myinfo.MainContent.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_MainContentdictionary[myinfo.SubTitle.text];//setup main content
-     //   Debug.Log("bigtitle" + myinfo.BigTitle.text);
-    }
-
-    void SetupImage() {
-       // Debug.Log("ID"+myinfo.CurrentID);
-      //  Debug.Log("subtitle" + myinfo.SubTitle.text);
-        Sprite temp = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_SubImagedictionary[myinfo.SubTitle.text];
-        myinfo.BigTitleImage.sprite = temp;
-        SetupTopBarImage();
-    }
-    public void SetupTopBarImage()//keepworking
-    {
-
-            int index = MidNumber(myinfo.TopImagePos.Length);
-
-        int resourceImgeSize = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage.Length;
-            myinfo.TopImagePos[index].GetComponent<Image>().sprite = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage[myinfo.CurrentSubtitleNum];
-        myinfo.TopImagePos[index-1].GetComponent<Image>().sprite = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage[LoopNumber("right", resourceImgeSize, myinfo.CurrentSubtitleNum)];
-        myinfo.TopImagePos[index+1].GetComponent<Image>().sprite = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage[LoopNumber("left", resourceImgeSize, myinfo.CurrentSubtitleNum)];
-
-    }
-
-    int MidNumber(int arrayLenth) {
-        return Mathf.FloorToInt(arrayLenth / 2);
     }
 
     public void UpdateUItext()
@@ -126,6 +96,105 @@ public class UIClinet : MonoBehaviour {
         }
 
     }
+
+    private void OnDisable()
+    {
+        UpdateUIeventtext -= SetupText;
+        UpdateUIeventImage -= SetupImage;
+    }
+
+    #endregion
+
+    #region setupGUI
+
+    void SetupText() {
+
+        myinfo.BigTitle.text = myinfo.CurrentTitle;//setup default BigTitle
+        myinfo.SubTitle.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle[myinfo.CurrentSubtitleNum];//setup subtitle
+        myinfo.MainContent.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_MainContentdictionary[myinfo.SubTitle.text];//setup main content
+        SetupBottomText();
+
+     //   Debug.Log("bigtitle" + myinfo.BigTitle.text);
+    }
+
+    void SetupBottomText() {
+        string[] temp = GetBottomText(myinfo.BottomTitleSelection);
+
+        for (int i = 0; i < myinfo.BottomTitleText.Length; i++)
+        {
+            myinfo.BottomTitleText[i].text = temp[i];
+        }
+    }
+
+    string[] GetBottomText(List<string> _BottomTitleSelection) {
+        string[] temp;
+     
+        List<string> templist = new List<string>();
+        for (int i = 0; i < ReadJson.instance.myinformationList.Count; i++)//add title to list 
+        {
+            _BottomTitleSelection.Add(ReadJson.instance.myinformationList[i].BigTitle);
+            
+        }
+
+        //take out it's self
+        _BottomTitleSelection.Remove(myinfo.CurrentTitle);
+        tempint = getDifferentNumInRange(0, _BottomTitleSelection.Count-1, myinfo.BottomTitleText.Length);//random 3 different num 
+
+        for (int i = 0; i < tempint.Length; i++)//set 3different title
+        {
+            templist.Add(_BottomTitleSelection[tempint[i]]);
+        }
+
+        temp = templist.ToArray();
+        _BottomTitleSelection.Clear();
+        templist.Clear();
+        return temp;
+    }
+
+    void SetupImage() {
+        Sprite temp = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_SubImagedictionary[myinfo.SubTitle.text];
+        myinfo.BigTitleImage.sprite = temp;
+        SetupTopBarImage();
+        SetupBottomBarImage(setupFrontImage);
+        SetupBottomBarImage(setupBackImage);
+    }
+    public void SetupTopBarImage()//keepworking
+    {
+            int index = MidNumber(myinfo.TopImagePos.Length);
+
+        int resourceImgeSize = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage.Length;
+            myinfo.TopImagePos[index].GetComponent<Image>().sprite = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage[myinfo.CurrentSubtitleNum];
+        myinfo.TopImagePos[index-1].GetComponent<Image>().sprite = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage[LoopNumber("right", resourceImgeSize, myinfo.CurrentSubtitleNum)];
+        myinfo.TopImagePos[index+1].GetComponent<Image>().sprite = ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage[LoopNumber("left", resourceImgeSize, myinfo.CurrentSubtitleNum)];
+
+    }
+
+     void SetupBottomBarImage(setupBottomImage mydelegate) {
+        List<Image[]> list = new List<Image[]>();
+       // Debug.Log(myinfo.BottomTitleText[0].text);
+        foreach (var item in ReadJson.instance.myinformationList)
+        {
+            for (int i = 0; i < myinfo.BottomFrontImage.Length; i++)
+            {
+                if (item.BigTitle == myinfo.BottomTitleText[i].text)
+                {
+                    mydelegate(i, item);
+                }
+            } 
+        }
+    }
+
+    void setupFrontImage(int i, Information item) {
+        myinfo.BottomFrontImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.BottomTitleText[i].text];
+    }
+
+    void setupBackImage(int i, Information item) {
+        myinfo.BottomFrontImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.BottomTitleText[i].text];
+    }
+
+
+    #endregion
+
     #region TopImageMove
     public void MoveLeft(string left) {
         for (int i = 1; i < myinfo.TopImagePos.Length; i++)
@@ -218,10 +287,51 @@ public class UIClinet : MonoBehaviour {
         }
 
     #endregion
-    // Update is called once per frame
-    void Update () {
-		
-	}
+
+    #region general function or math function
+    int MidNumber(int arrayLenth)
+    {
+        return Mathf.FloorToInt(arrayLenth / 2);
+    }
 
 
+    int[] getDifferentNumInRange(int min, int max, int index)
+    {
+        List<int> temp = new List<int>();
+        if (index - 1 <= max - min)
+        {
+            for (int i = 0; i < index; i++)
+            {
+                int value = Random.Range(min, max + 1);
+                if (i == 0)
+                {
+                    temp.Add(value);
+                }
+                else
+                {
+                    while (temp.Contains(value))
+                    {
+                        value = Random.Range(min, max + 1);
+                    }
+                    temp.Add(value);
+                }
+            }
+            int[] differentRandomNum = temp.ToArray();
+            temp.Clear();
+            return differentRandomNum;
+        }
+        else
+        {
+            Debug.Log("Error the index is too big");
+
+        }
+        return temp.ToArray();
+    }
+    #endregion
+
+
+    void Update()
+    {
+
+    }
 }
