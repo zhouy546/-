@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SkeletonRenderer : MonoBehaviour {
-    public Dictionary<int, GameObject[]> _bodySkeletons = new Dictionary<int, GameObject[]>();
+public class clicktest : MonoBehaviour {
+
 	// Use this for initialization
 	void Start () {
 		
@@ -13,4 +13,10 @@ public class SkeletonRenderer : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    public void CLICKTEST()
+    {
+        Debug.Log("clicktest");
+
+    }
 }

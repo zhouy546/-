@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public class UIClinet : MonoBehaviour {
+    private IEnumerator coroutine;
     public delegate void initializationUItext();
     public  event initializationUItext UpdateUIeventtext;
     public delegate void initializationUImage();
@@ -10,7 +11,7 @@ public class UIClinet : MonoBehaviour {
     int[] tempint;
 
     private int FrontAndBackInt = -1;
-    delegate void setupBottomImage(int i, Information item,bool isback);
+    delegate void setupBottomImage(int i, Information item,bool isback, Image[] BackImageOrFrotImage);
    
     [System.Serializable]
     public struct info{
@@ -39,6 +40,7 @@ public class UIClinet : MonoBehaviour {
         public string[] BackBottomTitleSelection;
         public string[] tempF;
         public Text[] BottomTitleText;
+        public float ImageFadeTime;
 
 
         //public Dictionary<string,Image> BottomDisplay
@@ -51,8 +53,8 @@ public class UIClinet : MonoBehaviour {
     public info myinfo;
 	// Use this for initialization
 	void Start () {
-        myinfo.tempF = GetBottomText(myinfo.BottomTitleSelection);
-        myinfo.BackBottomTitleSelection = GetBottomText(myinfo.BottomTitleSelection);
+        coroutine = UpdateBottomSection(5.0f);
+        StartCoroutine(coroutine);
     }
 
     public void ResetProgram() {
@@ -70,8 +72,9 @@ public class UIClinet : MonoBehaviour {
 
     IEnumerator SubScribeUpdateUIevent()
     {
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(.5f);
         UpdateUI();
+
     }
     #region event and delegate
     public void UpdateUI()
@@ -113,16 +116,31 @@ public class UIClinet : MonoBehaviour {
 
     void SetupText() {
 
-        myinfo.BigTitle.text = myinfo.CurrentTitle;//setup default BigTitle
-        myinfo.SubTitle.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle[myinfo.CurrentSubtitleNum];//setup subtitle
-        myinfo.MainContent.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_MainContentdictionary[myinfo.SubTitle.text];//setup main content
+        SetupMidToptext();
         SetupBottomText();
 
      //   Debug.Log("bigtitle" + myinfo.BigTitle.text);
     }
 
+    void SetupMidToptext()
+    {
+        myinfo.BigTitle.text = myinfo.CurrentTitle;//setup default BigTitle
+        myinfo.SubTitle.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle[myinfo.CurrentSubtitleNum];//setup subtitle
+        myinfo.MainContent.text = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_MainContentdictionary[myinfo.SubTitle.text];//setup main content
+    }
+
+    public IEnumerator UpdateBottomSection(float waitTime) {
+        while (true)
+        {
+            //Debug.Log("start corutine");
+            yield return new WaitForSeconds(waitTime);
+            SetupBottomText();
+            SetupBottomBarImage();
+        }
+    } 
+
     void SetupBottomText() {
-        myinfo.tempF = myinfo.BackBottomTitleSelection;
+        myinfo.tempF = GetBottomText(myinfo.BottomTitleSelection);
         myinfo.BackBottomTitleSelection = GetBottomText(myinfo.BottomTitleSelection);
 
         for (int i = 0; i < myinfo.BottomTitleText.Length; i++)
@@ -157,56 +175,53 @@ public class UIClinet : MonoBehaviour {
     }
 
     void SetupImage() {
+        setupMidTopImage();
+        SetupBottomBarImage();
+    }
+
+    void setupMidTopImage() {
         Sprite temp = ReadJson.instance.myinformationList[myinfo.CurrentID].SubTitle_SubImagedictionary[myinfo.SubTitle.text];
         myinfo.BigTitleImage.sprite = temp;
         SetupTopBarImage();
+    }
+
+    void SetupBottomBarImage()
+    {
         FrontAndBackInt = NumPositiveAndNegitive(FrontAndBackInt);
         if (FrontAndBackInt > 0)
         {
-            SetupBottomBarImage(setupFrontImage, true,false);
-            SetupBottomBarImage(setupBackImage, false,true);
+            SetupBottomBarImage(setupImage, true, false, myinfo.BottomFrontImage);
+            SetupBottomBarImage(setupImage, false, true, myinfo.BottomBackImage);
             //show FrontImage            //front fade in 
-            LeanTween.value(0f, 1f, 1f).setOnUpdate((float value) =>
-            {
-                    for (int i = 0; i < myinfo.BottomFrontImage.Length; i++)
-                    {
-                        myinfo.BottomFrontImage[i].color = new Color(1f, 1f, 1f, value);
-                    }
-            });
+            FadeAndshowImage(myinfo.BottomFrontImage, 0f, 1f, myinfo.ImageFadeTime);
             //back fade out
-            LeanTween.value(1f,0f, 1f).setOnUpdate((float value) =>
-            {
-                for (int i = 0; i < myinfo.BottomFrontImage.Length; i++)
-                {
-                    myinfo.BottomBackImage[i].color = new Color(1f, 1f, 1f, value);
-                }
-            });
-
-
+            FadeAndshowImage(myinfo.BottomBackImage, 1f, 0f, myinfo.ImageFadeTime);
         }
-        else {
+        else
+        {
             //front fade out 
-            SetupBottomBarImage(setupFrontImage,true,true);
+            SetupBottomBarImage(setupImage, true, true, myinfo.BottomFrontImage);
+            SetupBottomBarImage(setupImage, false, false, myinfo.BottomBackImage);
             //show FrontImage                       //front fade out 
-            LeanTween.value(1f, 0f, 1f).setOnUpdate((float value) =>
-            {
-                for (int i = 0; i < myinfo.BottomFrontImage.Length; i++)
-                {
-                    myinfo.BottomFrontImage[i].color = new Color(1f, 1f, 1f, value);
-                }
-            });
+            FadeAndshowImage(myinfo.BottomFrontImage, 1f, 0f, myinfo.ImageFadeTime);
             //back fade in
-            SetupBottomBarImage(setupBackImage, false,false);
-            LeanTween.value(0f, 1f, 1f).setOnUpdate((float value) =>
-            {
-                for (int i = 0; i < myinfo.BottomFrontImage.Length; i++)
-                {
-                    myinfo.BottomBackImage[i].color = new Color(1f, 1f, 1f, value);
-                }
-            });
+            FadeAndshowImage(myinfo.BottomBackImage, 0f, 1f, myinfo.ImageFadeTime);
         }
+
+
     }
 
+    void FadeAndshowImage(Image[] image,float from, float to, float time)
+    {
+        LeanTween.value(from, to, time).setOnUpdate((float value) =>
+        {
+            for (int i = 0; i < image.Length; i++)
+            {
+                image[i].color = new Color(1f, 1f, 1f, value);
+            }
+        });
+
+    }
     int NumPositiveAndNegitive(int x)
     {
         return -x;
@@ -224,7 +239,7 @@ public class UIClinet : MonoBehaviour {
 
     }
 
-     void SetupBottomBarImage(setupBottomImage mydelegate,bool isSetupFront, bool isback) {
+     void SetupBottomBarImage(setupBottomImage mydelegate,bool isSetupFront, bool isback, Image[] BackImageOrFrotImage) {
         List<Image[]> list = new List<Image[]>();
        // Debug.Log(myinfo.BottomTitleText[0].text);
         foreach (var item in ReadJson.instance.myinformationList)
@@ -233,44 +248,27 @@ public class UIClinet : MonoBehaviour {
             {
                 if (isSetupFront)
                 {
-                        mydelegate(i, item, isback);
+                        mydelegate(i, item, isback, BackImageOrFrotImage);
                 }
                 else {
-                        mydelegate(i, item, isback);
+                        mydelegate(i, item, isback, BackImageOrFrotImage);
                 }
             } 
         }
     }
 
-    void setupFrontImage(int i, Information item, bool isback) {
+    void setupImage(int i, Information item, bool isback , Image[] BackImageOrFrotImage) {
         if (isback)
         {
             if (item.BigTitle == myinfo.BackBottomTitleSelection[i])
             {
-                myinfo.BottomFrontImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.BackBottomTitleSelection[i]];
+                BackImageOrFrotImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.BackBottomTitleSelection[i]];
             }
         }
         else {
             if (item.BigTitle == myinfo.BottomTitleText[i].text)
             {
-                myinfo.BottomFrontImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.tempF[i]];
-            }
-        }
-      
-    }
-
-    void setupBackImage(int i, Information item, bool isback) {
-        if (isback)
-        {
-            if (item.BigTitle == myinfo.BackBottomTitleSelection[i])
-            {
-                myinfo.BottomBackImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.BackBottomTitleSelection[i]];
-            }
-        }
-        else {
-            if (item.BigTitle == myinfo.BottomTitleText[i].text)
-            {
-                myinfo.BottomBackImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.tempF[i]];
+                BackImageOrFrotImage[i].sprite = item.Bigtitle_BackgroundImagedictionary[myinfo.tempF[i]];
             }
         }
        
@@ -366,8 +364,9 @@ public class UIClinet : MonoBehaviour {
 
     void UpdateSubtitle(string leftRight) {
             myinfo.CurrentSubtitleNum = LoopNumber(leftRight, ReadJson.instance.myinformationList[myinfo.CurrentID].SubImage.Length, myinfo.CurrentSubtitleNum);
-       // Debug.Log("I ma here the important num"+myinfo.CurrentSubtitleNum);
-            UpdateUI();
+        // Debug.Log("I ma here the important num"+myinfo.CurrentSubtitleNum);
+        SetupMidToptext();
+        setupMidTopImage();
         }
 
     #endregion
@@ -416,11 +415,14 @@ public class UIClinet : MonoBehaviour {
 
     void Update()
     {
+        
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log("CLICK");
-            UpdateUI();
-
+            // UpdateUI();
+       //    UpdateBottomSection();
         }
+        
     }
+
+    
 }

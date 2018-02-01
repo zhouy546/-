@@ -16,6 +16,7 @@ public class TochTest : MonoBehaviour {
         Touch[] myTouches = Input.touches;
         for (int i = 0; i < Input.touchCount; i++)
         {
+            Debug.Log(myTouches[i].position);
         }
     }
 }
