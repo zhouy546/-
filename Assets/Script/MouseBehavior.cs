@@ -24,22 +24,24 @@ public class MouseBehavior : MonoBehaviour,IBeginDragHandler,IDragHandler,IEndDr
     ClientInfo client;
     //public void Do
     public void OnBeginDrag(PointerEventData eventData) {
-        Debug.Log("Start position is : " +client.StartPos);
+        //Debug.Log("Start position is : " +client.StartPos);
         client.StartPos = eventData.position;
-        client.EndPos = eventData.position;
+       
 
     }
 
     public void OnDrag(PointerEventData eventData) {
-        client.UpdatePos = eventData.position;       
+        client.UpdatePos = eventData.position;
+        client.EndPos = eventData.position;
+        MoveBehavior(MoveDirection());
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log("End position is : " + client.EndPos);
+      //  Debug.Log("End position is : " + client.EndPos);
         client.EndPos = eventData.position;
-        Debug.Log("Move Distance is : "+client.MoveDistance);
-        MoveBehavior(MoveDirection());
+     //   Debug.Log("Move Distance is : "+client.MoveDistance);
+      
 
     }
 
@@ -48,14 +50,14 @@ public class MouseBehavior : MonoBehaviour,IBeginDragHandler,IDragHandler,IEndDr
         {
             case Move.MoveRight:
                 uiclient.MoveRight("right");
-                Debug.Log("rigt");
+              //  Debug.Log("rigt");
                 break;
             case Move.MoveLeft:
                 uiclient.MoveLeft("left");
-                Debug.Log("left");
+              //  Debug.Log("left");
                 break;
             case Move.Idle:
-                Debug.Log("IDLE");
+              //  Debug.Log("IDLE");
                 break;
             default:
                 break;
@@ -66,13 +68,12 @@ public class MouseBehavior : MonoBehaviour,IBeginDragHandler,IDragHandler,IEndDr
     {
         if (xAxisDis() > 0 && client.MoveDistance > 100)
         {
+            client.StartPos = client.EndPos;
             return Move.MoveRight;
         }
-        else if (xAxisDis() == 0)
-        {
-            return Move.Idle;
-        } else if(xAxisDis()<0&&client.MoveDistance>100) {
-           return Move.MoveLeft;
+        else if(xAxisDis()<0&&client.MoveDistance>100) {
+            client.StartPos = client.EndPos;
+            return Move.MoveLeft;
         }     
         return Move.Idle;
     }
